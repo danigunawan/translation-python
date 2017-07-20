@@ -1,0 +1,17 @@
+MANIFEST.in
+setup.py
+translation/__init__.py
+translation/translation.py
+translation.egg-info/PKG-INFO
+translation.egg-info/SOURCES.txt
+translation.egg-info/dependency_links.txt
+translation.egg-info/requires.txt
+translation.egg-info/top_level.txt
+translation/static/.DS_Store
+translation/static/css/styles.css
+translation/static/js/annyang.js
+translation/static/js/jquery-3.2.1.js
+translation/static/js/responsive_voice.js
+translation/static/js/web_speech_script.js
+translation/templates/index.html
+translation/templates/layout.html

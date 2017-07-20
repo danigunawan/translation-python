@@ -1,0 +1,6 @@
+flask
+requests
+futures
+flask-bootstrap
+googletrans
+yandex.translate
