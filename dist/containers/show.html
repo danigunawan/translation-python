@@ -1,0 +1,10 @@
+<h1>{{object.name}}</h1>
+
+{% if object.item_set.all %}
+  <ul>
+    {% for item in object.item_set.all%}
+      <li>{{ item.name }}</li>
+    {% endfor %}
+  </ul>
+{% else %}
+{% endif %}

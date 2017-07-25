@@ -1,47 +1,58 @@
 import os
-from flask import Flask, request, render_template, url_for, jsonify
+from flask import request, render_template, url_for, jsonify
 from googletrans import Translator
 from yandex_translate import YandexTranslate
-from flask_bootstrap import Bootstrap
+from collections import OrderedDict
+from setup_app import create_app
+from models import *
+import pdb
 
-app = Flask(__name__) # create the application instance
-Bootstrap(app)
-app.config.from_object(__name__) # load config from this file i.e. translation.py
-
-# Load default config and override config from an environment variable
-# generated the secret key by importing os and binascii
-# then calling binsacii.hexlify(os.urandom(24))
-app.config.update(dict(
-    SECRET_KEY='ba847f1861cb636b722ed59097bc82ce66b42da6ddf2e290'
-))
-
-app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+app = create_app()
 
 @app.route('/')
 def index():
-    languages = { "English": "en", "Filipino": "tl", "Japanese": "ja" }
-    recognitions = { "English": "en-US", "Filipino": "fil-PH", "Japanese": "ja" }
-    translators = { "Google Translate" : "google_translate" , "Yandex Translate": "yandex_translate" }
+    languages = [("English", "en"), ("Filipino", "tl"), ("Japanese", "ja")]
+    recognitions = [("English", "en-US"), ("Filipino", "fil-PH"), ("Japanese", "ja")]
+    translators = [("Google Translate", "google_translate"), ("Yandex Translate", "yandex_translate")]
 
-    return render_template('index.html', languages=languages, recognitions=recognitions, translators=translators)
+    return render_template('index.html', languages=OrderedDict(languages), recognitions=OrderedDict(recognitions), translators=OrderedDict(translators))
 
-@app.route('/yandex_translate', methods=['POST'])
-def yandex_translate():
-    translated_text = ""
-    if len(request.form['text']) > 0:
-        translator = YandexTranslate("trnsl.1.1.20170124T023923Z.db368f9b9c7a7f06.26bd8be0cf53946d203c786ae83d24c73ea5954d")
-        translated_text = translator.translate(request.form['text'], request.form['dest'])['text'][0]
+@app.route('/translate', methods=['POST'])
+def translate():
+    translation = {
+        'translated_text': "",
+        'original_text': request.form['text'],
+        'source_language': request.form['src'],
+        'destination_language': request.form['dest'],
+        'api': request.form['api']
+    }
 
-    return jsonify({ 'translation': translated_text, 'original_text': request.form['text'] })
+    if translation['original_text']:
+        matching_record = Translation.check_for_matches(translation['original_text'])
+        if matching_record is None:
+            translation['translated_text'] = get_translated_text_from_api(translation['api'], translation['original_text'], translation['destination_language'])
+        else:
+            translation['translated_text'] = matching_record.translated_text
+            translation['destination_language'] = matching_record.translated_language
+            translation['original_text'] = matching_record.original_text
+            translation['source_language'] = matching_record.original_language
+        return jsonify(translation)
+    else:
+        return jsonify({ 'success': False })
 
-@app.route('/google_translate', methods=['POST'])
-def google_translate():
-    translated_text = ""
-    if len(request.form['text']) > 0:
-        translator = Translator()
-        translated_text = translator.translate(request.form['text'], dest=request.form['dest']).text
-    return jsonify({ 'translation': translated_text, 'original_text': request.form['text'] })
+@app.route('/save_translation', methods=['POST'])
+def save_translation():
+    translation = Translation(request.form['original_text'], request.form['original_language'],
+                              request.form['translated_text'], request.form['translated_language'],
+                              request.form['shortcut'])
+    db.session.add(translation)
+    db.session.commit()
+    return jsonify({ 'success': True })
 
+@app.route('/show_translations')
+def show_translations():
+    translations = Translation.query.all()
+    return render_template('translations.html', translations=translations)
 
 @app.context_processor
 def override_url_for():
@@ -55,3 +66,14 @@ def dated_url_for(endpoint, **values):
                                      endpoint, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
+
+def get_translated_text_from_api(api, original_text, destination_language):
+    if api is 'google_translate':
+        translator = Translator()
+        return translator.translate(original_text, dest=destination_language).text
+    else:
+        translator = YandexTranslate(app.config['API_KEY'])
+        return translator.translate(original_text, destination_language)['text'][0]
+
+if __name__ == '__main__':
+    app.run()

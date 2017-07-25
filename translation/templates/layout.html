@@ -20,7 +20,12 @@
     </div>
   </div>
   <div class=container>
-    {% block content %}{% endblock %}
+    <div class='col-md-9'>
+      {% block content %}{% endblock %}
+    </div>
+    <div class='col-md-3'>
+      {% block sidebar %}{% endblock %}
+    </div>
   </div>
 {% endblock %}
 </html>
