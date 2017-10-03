@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_bootstrap import Bootstrap
 from models import db, migrate
 
 def create_app(name=None):
@@ -11,7 +10,7 @@ def create_app(name=None):
     app.config.from_object('config.DevelopmentConfig') # load config from this file i.e. translation.py
     db.init_app(app)
     migrate.init_app(app, db)
-    Bootstrap(app)
+    # Bootstrap(app)
 
     # Load default config and override config from an environment variable
     # generated the secret key by importing os and binascii

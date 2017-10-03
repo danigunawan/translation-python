@@ -3,3 +3,4 @@
 .envrc
 .python-version
 config.py
+node_modules

@@ -1,5 +1,8 @@
+require('../js/lib/annyang.js')
+require("../css/translation-page.css")
+require('../css/favicon.png')
+
 $(document).ready(function(){
-  if($('#translation-area').length){
     var output = ""
     var chosen_language = $('#translation-language').val()
     var current_api = $('#translator').val() === 'google_translate' ? "google_translate" : "yandex_translate"
@@ -163,7 +166,7 @@ $(document).ready(function(){
 
         annyang.addCallback('resultNoMatch', function(phrases){
           output = output + " " + phrases[0]
-          trimmed_output = $.trim(output)
+          let trimmed_output = $.trim(output)
           dictate_translation(trimmed_output, chosen_language, current_api)
         })
 
@@ -186,7 +189,6 @@ $(document).ready(function(){
       }else{
         responsiveVoice.speak("Annyang Recognition API not started", 'US English Female', parameters)
       }
-    }
   }
   $(function(){
     if($('#translation-area').length){
